@@ -1,5 +1,11 @@
-// Tab navigation
+// ============================================================
+// APP.JS - Điều hướng và khởi tạo
+// ============================================================
+
 document.addEventListener('DOMContentLoaded', () => {
+    // ============================================
+    // 1. TAB NAVIGATION
+    // ============================================
     const navLinks = document.querySelectorAll('.nav-link');
     const tabs = {
         assistant: document.getElementById('assistant'),
@@ -12,18 +18,35 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const tab = link.dataset.tab;
 
-            // Update nav active state
             navLinks.forEach(l => l.classList.remove('active'));
             link.classList.add('active');
 
-            // Update tab content
             Object.keys(tabs).forEach(key => {
                 tabs[key].classList.toggle('active', key === tab);
             });
         });
     });
 
-    // Khởi tạo các module
+    // ============================================
+    // 2. THEME TOGGLE (SÁNG/TỐI)
+    // ============================================
+    const themeToggle = document.getElementById('themeToggle');
+    
+    const savedTheme = localStorage.getItem('studyai-theme');
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+        themeToggle.textContent = '☀️';
+    }
+
+    themeToggle.addEventListener('click', () => {
+        const isDark = document.body.classList.toggle('dark-theme');
+        themeToggle.textContent = isDark ? '☀️' : '🌙';
+        localStorage.setItem('studyai-theme', isDark ? 'dark' : 'light');
+    });
+
+    // ============================================
+    // 3. KHỞI TẠO CÁC MODULE
+    // ============================================
     if (typeof initAIAssistant === 'function') initAIAssistant();
     if (typeof initScheduler === 'function') initScheduler();
     if (typeof initMentalHealth === 'function') initMentalHealth();
