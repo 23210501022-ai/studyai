@@ -25,6 +25,7 @@
                 <a href="#assistant" class="nav-link active" data-tab="assistant">Trợ lý học tập</a>
                 <a href="#scheduler" class="nav-link" data-tab="scheduler">Lập lịch thông minh</a>
                 <a href="#mental" class="nav-link" data-tab="mental">Sức khỏe tinh thần</a>
+                <a href="#dashboard" class="nav-link" data-tab="dashboard">📊 Dashboard</a>
             </nav>
         </div>
     </header>
@@ -94,7 +95,7 @@
                     </div>
 
                     <!-- Phần lịch đã lưu -->
-                    <div id="savedSchedulesSection" style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                    <div id="savedSchedulesSection">
                         <h3>📂 Lịch đã lưu</h3>
                         <div id="savedSchedulesList">
                             <p class="placeholder">Chưa có lịch học nào được lưu.</p>
@@ -149,13 +150,83 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Tab: Dashboard -->
+            <section id="dashboard" class="tab-content">
+                <div class="dashboard-wrapper">
+                    <h1>📊 Dashboard dữ liệu sinh viên</h1>
+                    <p class="subtitle">Phân tích từ 3 file CSV: AI Assistant Usage, Stress Dataset, Stress Level Dataset</p>
+
+                    <!-- Thống kê tổng quan -->
+                    <div class="stats-overview" id="statsOverview">
+                        <div class="stat-card">
+                            <div class="stat-icon">📚</div>
+                            <div class="stat-number" id="totalSessions">0</div>
+                            <div class="stat-label">Tổng số phiên học</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">⏱️</div>
+                            <div class="stat-number" id="avgSessionLength">0</div>
+                            <div class="stat-label">Thời gian TB (phút)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">⭐</div>
+                            <div class="stat-number" id="avgSatisfaction">0</div>
+                            <div class="stat-label">Điểm hài lòng TB</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🧠</div>
+                            <div class="stat-number" id="avgStress">0</div>
+                            <div class="stat-label">Mức độ căng thẳng</div>
+                        </div>
+                    </div>
+
+                    <!-- Biểu đồ 1: Kết quả học tập -->
+                    <div class="chart-container">
+                        <h3>📈 Kết quả học tập</h3>
+                        <div class="chart-bars" id="outcomeChart"></div>
+                    </div>
+
+                    <!-- Biểu đồ 2: Phân bố theo khối lớp -->
+                    <div class="chart-row">
+                        <div class="chart-container half">
+                            <h3>🎓 Theo khối lớp</h3>
+                            <div class="chart-bars" id="levelChart"></div>
+                        </div>
+                        <div class="chart-container half">
+                            <h3>📚 Theo môn học</h3>
+                            <div class="chart-bars" id="disciplineChart"></div>
+                        </div>
+                    </div>
+
+                    <!-- Biểu đồ 3: Stress -->
+                    <div class="chart-row">
+                        <div class="chart-container half">
+                            <h3>😰 Mức độ Stress</h3>
+                            <div class="chart-bars" id="stressLevelChart"></div>
+                        </div>
+                        <div class="chart-container half">
+                            <h3>💤 Chất lượng giấc ngủ</h3>
+                            <div class="chart-bars" id="sleepChart"></div>
+                        </div>
+                    </div>
+
+                    <!-- Gợi ý từ dữ liệu -->
+                    <div class="insights-container">
+                        <h3>💡 Gợi ý từ dữ liệu</h3>
+                        <div id="dataInsights" class="insights-list">
+                            <p class="placeholder">Đang phân tích dữ liệu...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
     </main>
 
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <p>© 2025 StudyAI - Trợ lý số cho sinh viên</p>
+            <p>© 2026 StudyAI - Trợ lý số cho sinh viên</p>
         </div>
     </footer>
 
@@ -164,5 +235,7 @@
     <script src="js/ai-assistant.js"></script>
     <script src="js/scheduler.js"></script>
     <script src="js/mental-health.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/dashboard.js"></script>
 </body>
 </html>
