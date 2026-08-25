@@ -5,38 +5,6 @@
 // ============================================================
 // 1. DỮ LIỆU TỪ FILE: ai_assistant_usage_student_life.csv
 // ============================================================
-const aiAssistantData = {
-    // Thống kê theo khối lớp
-    byLevel: {
-        'Undergraduate': 0,
-        'Graduate': 0,
-        'High School': 0
-    },
-    // Thống kê theo môn học
-    byDiscipline: {},
-    // Thống kê theo kết quả
-    byOutcome: {
-        'Assignment Completed': 0,
-        'Idea Drafted': 0,
-        'Confused': 0,
-        'Gave Up': 0
-    },
-    // Thống kê sử dụng lại
-    usedAgain: { true: 0, false: 0 },
-    // Thống kê theo TaskType
-    byTaskType: {
-        'Studying': 0,
-        'Coding': 0,
-        'Writing': 0,
-        'Brainstorming': 0,
-        'Homework Help': 0,
-        'Research': 0
-    },
-    totalSessions: 0,
-    avgSessionLength: 0,
-    avgPrompts: 0,
-    avgSatisfaction: 0
-};
 
 // Dữ liệu mẫu từ CSV (đã được xử lý)
 const sampleSessions = [
@@ -73,7 +41,7 @@ const sampleSessions = [
     { level: 'High School', discipline: 'Math', outcome: 'Confused', usedAgain: true, taskType: 'Writing', sessionLength: 27.55, prompts: 7, satisfaction: 3.5 },
 ];
 
-// Hàm phân tích dữ liệu
+// Hàm phân tích dữ liệu AI Assistant
 function analyzeAIAssistantData() {
     const data = {
         byLevel: { 'Undergraduate': 0, 'Graduate': 0, 'High School': 0 },
@@ -110,17 +78,7 @@ function analyzeAIAssistantData() {
 // ============================================================
 // 2. DỮ LIỆU TỪ FILE: Stress_Dataset.csv
 // ============================================================
-const stressData = {
-    byGender: { 0: 0, 1: 0 },
-    byAge: {},
-    stressLevels: { 'Eustress': 0, 'Distress': 0, 'No Stress': 0 },
-    avgAnxiety: 0,
-    avgSleepQuality: 0,
-    avgDepression: 0,
-    total: 0
-};
 
-// Dữ liệu mẫu từ Stress_Dataset.csv
 const sampleStress = [
     { gender: 0, age: 20, stressType: 'Eustress', anxiety: 4, sleepQuality: 2, depression: 1 },
     { gender: 0, age: 20, stressType: 'Eustress', anxiety: 3, sleepQuality: 1, depression: 2 },
@@ -165,15 +123,7 @@ function analyzeStressData() {
 // ============================================================
 // 3. DỮ LIỆU TỪ FILE: StressLevelDataset.csv
 // ============================================================
-const stressLevelData = {
-    byStressLevel: { 0: 0, 1: 0, 2: 0 },
-    avgAnxiety: 0,
-    avgDepression: 0,
-    avgSleepQuality: 0,
-    total: 0
-};
 
-// Dữ liệu mẫu từ StressLevelDataset.csv
 const sampleStressLevel = [
     { stressLevel: 1, anxiety: 14, depression: 11, sleepQuality: 2 },
     { stressLevel: 2, anxiety: 15, depression: 15, sleepQuality: 1 },
@@ -252,9 +202,7 @@ function getAIAdviceFromData(level, discipline) {
     return advices;
 }
 
-// ============================================================
-// 5. EXPORT CHO CÁC MODULE KHÁC
-// ============================================================
+// Export cho các module khác
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         analyzeAIAssistantData,
