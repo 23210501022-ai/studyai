@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
         assistant: document.getElementById('assistant'),
         scheduler: document.getElementById('scheduler'),
         mental: document.getElementById('mental'),
+        dashboard: document.getElementById('dashboard'),
     };
 
     navLinks.forEach(link => {
@@ -50,4 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof initAIAssistant === 'function') initAIAssistant();
     if (typeof initScheduler === 'function') initScheduler();
     if (typeof initMentalHealth === 'function') initMentalHealth();
+    
+    // Dashboard sẽ được khởi tạo từ data.js và dashboard.js
 });
