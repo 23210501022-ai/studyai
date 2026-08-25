@@ -197,7 +197,6 @@ function renderInsights(aiData, stressData, stressLevelData) {
 // KHỞI TẠO DASHBOARD
 // ============================================
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    // Đợi các module data load xong
     setTimeout(() => {
         if (typeof analyzeAIAssistantData !== 'undefined') {
             initDashboard();
