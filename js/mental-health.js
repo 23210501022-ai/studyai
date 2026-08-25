@@ -12,7 +12,6 @@ function initMentalHealth() {
     const pressureDisplay = document.getElementById('pressureDisplay');
     const adviceContainer = document.getElementById('mentalAdvice');
 
-    // Update displays
     anxiety.addEventListener('input', () => {
         anxietyDisplay.textContent = anxiety.value;
     });
@@ -24,7 +23,7 @@ function initMentalHealth() {
     });
 
     function getAdvice(a, s, p) {
-        const score = (a + (6 - s) + p) / 3; // 1-5, higher = worse
+        const score = (a + (6 - s) + p) / 3;
         let status, advice, color;
 
         if (score <= 2) {
@@ -89,12 +88,9 @@ function initMentalHealth() {
     }
 
     analyzeBtn.addEventListener('click', analyze);
-
-    // Auto analyze on load
     setTimeout(analyze, 200);
 }
 
-// Auto init
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
     initMentalHealth();
 } else {
