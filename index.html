@@ -15,11 +15,12 @@
                 <span class="logo-icon">🧠</span>
                 <span class="logo-text">Study<span class="highlight">AI</span></span>
             </div>
-
-             <!-- 👇 THÊM PHẦN NÀY - Nút chuyển đổi theme -->
-        <button id="themeToggle" class="theme-toggle" aria-label="Chuyển đổi giao diện">
-
-        </button>
+            
+            <!-- Nút chuyển đổi giao diện sáng/tối -->
+            <button id="themeToggle" class="theme-toggle" aria-label="Chuyển đổi giao diện">
+                🌙
+            </button>
+            
             <nav class="nav">
                 <a href="#assistant" class="nav-link active" data-tab="assistant">Trợ lý học tập</a>
                 <a href="#scheduler" class="nav-link" data-tab="scheduler">Lập lịch thông minh</a>
@@ -50,10 +51,12 @@
                             <button id="sendBtn" class="btn-primary">Gửi</button>
                         </div>
                         <div class="quick-questions">
-                            <button class="quick-btn" data-question="Tóm tắt kiến thức về Machine Learning">🤖 ML</button>
-                            <button class="quick-btn" data-question="Giải thích vòng lặp trong Python">🐍 Python</button>
+                            <button class="quick-btn" data-question="Machine Learning là gì?">🤖 ML</button>
+                            <button class="quick-btn" data-question="Cách học Python hiệu quả?">🐍 Python</button>
                             <button class="quick-btn" data-question="Cách giảm stress khi ôn thi">🧘 Stress</button>
-                            <button class="quick-btn" data-question="Lập kế hoạch học 1 ngày">📅 Lịch</button>
+                            <button class="quick-btn" data-question="Lập kế hoạch học tập hiệu quả">📅 Lịch học</button>
+                            <button class="quick-btn" data-question="Kỹ thuật ghi nhớ nhanh">🧠 Ghi nhớ</button>
+                            <button class="quick-btn" data-question="Quản lý thời gian cho sinh viên">⏰ Thời gian</button>
                         </div>
                     </div>
                 </div>
@@ -82,11 +85,19 @@
                             </div>
                             <button id="generateScheduleBtn" class="btn-primary">Tạo lịch học</button>
                         </div>
-                        <div class="schedule-result" id="scheduleResult">
+                        <div class="schedule-result">
                             <h3>📋 Lịch học đề xuất</h3>
                             <div id="scheduleList">
                                 <p class="placeholder">Nhấn "Tạo lịch học" để xem gợi ý</p>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Phần lịch đã lưu -->
+                    <div id="savedSchedulesSection" style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <h3>📂 Lịch đã lưu</h3>
+                        <div id="savedSchedulesList">
+                            <p class="placeholder">Chưa có lịch học nào được lưu.</p>
                         </div>
                     </div>
                 </div>
@@ -132,6 +143,8 @@
                             <li>📵 Tạm dừng điện thoại 30 phút trước khi ngủ</li>
                             <li>🚶 Đi bộ 10 phút giữa giờ học</li>
                             <li>📓 Viết nhật ký cảm xúc mỗi tối</li>
+                            <li>🎵 Nghe nhạc thư giãn khi học</li>
+                            <li>💧 Uống đủ nước 2 lít mỗi ngày</li>
                         </ul>
                     </div>
                 </div>
