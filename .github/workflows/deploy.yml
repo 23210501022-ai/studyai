@@ -1,0 +1,54 @@
+name: Deploy with API Key
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Inject API Key into config.js
+        run: |
+          # Tạo file config.js từ template
+          cat > js/config.js << 'EOF'
+          // ============================================================
+          // CONFIG.JS - CẤU HÌNH GEMINI API (TỰ ĐỘNG TẠO BỞI GITHUB)
+          // ============================================================
+          
+          const CONFIG = {
+              GEMINI: {
+                  apiKey: '${{ secrets.GEMINI_API_KEY }}',
+                  model: 'gemini-2.0-flash-exp',
+                  url: 'https://generativelanguage.googleapis.com/v1beta/models'
+              }
+          };
+          
+          function getGeminiConfig() {
+              return CONFIG.GEMINI;
+          }
+          
+          function isGeminiConfigured() {
+              const config = getGeminiConfig();
+              return config.apiKey && config.apiKey.length > 10;
+          }
+          
+          if (typeof module !== 'undefined' && module.exports) {
+              module.exports = { CONFIG, getGeminiConfig, isGeminiConfigured };
+          }
+          EOF
+          
+          echo "✅ Config file created with API Key"
+      
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
+          publish_branch: gh-pages
+          force_orphan: true
