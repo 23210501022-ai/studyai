@@ -1,360 +1,183 @@
 // ============================================================
-// AI-ASSISTANT.JS - TRỢ LÝ AI SỬ DỤNG GEMINI
+// AI ASSISTANT MODULE - NÂNG CẤP NLU
 // ============================================================
 
-let aiLoading = false;
-let chatHistory = [];
-
-// ============================================
-// HÀM GỌI GEMINI API
-// ============================================
-async function callGeminiAPI(userMessage, context = '') {
-    const config = getGeminiConfig();
-    
-    // Kiểm tra API key
-    if (!config.apiKey || config.apiKey === 'AIzaSyDz2PZpHQ2mU3iMmLjX5KxV3F9ZdM3FgwM') {
-        console.warn('⚠️ API Key chưa được cấu hình, sử dụng fallback');
-        showToast('⚠️ Vui lòng cấu hình API Key trong file config.js', 'warning', 5000);
-        return null;
-    }
-    
-    const url = `${config.url}/${config.model}:generateContent?key=${config.apiKey}`;
-    
-    // Xây dựng prompt với context
-    const systemPrompt = `Bạn là "StudyAI" - trợ lý học tập thông minh dành cho sinh viên. 
-Nhiệm vụ của bạn:
-1. Trả lời câu hỏi học tập một cách chi tiết, dễ hiểu
-2. Đưa ra ví dụ cụ thể và thực tế
-3. Nếu là câu hỏi về sức khỏe tinh thần, trả lời với sự đồng cảm
-4. Sử dụng tiếng Việt trong giao tiếp
-5. Giữ giọng điệu thân thiện, tích cực
-
-${context ? `Context bổ sung: ${context}` : ''}
-
-Câu hỏi của sinh viên: ${userMessage}`;
-
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                contents: [
-                    {
-                        parts: [
-                            {
-                                text: systemPrompt
-                            }
-                        ]
-                    }
-                ],
-                generationConfig: {
-                    temperature: 0.7,
-                    maxOutputTokens: 1000,
-                    topP: 0.95,
-                    topK: 40
-                },
-                safetySettings: [
-                    {
-                        category: "HARM_CATEGORY_HARASSMENT",
-                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                    },
-                    {
-                        category: "HARM_CATEGORY_HATE_SPEECH",
-                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                    }
-                ]
-            })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            console.error('❌ Gemini API Error:', errorData);
-            
-            // Xử lý lỗi cụ thể
-            if (response.status === 403) {
-                showToast('❌ API Key không hợp lệ hoặc hết hạn!', 'error', 5000);
-            } else if (response.status === 429) {
-                showToast('⚠️ Đã vượt quá giới hạn request, vui lòng thử lại sau', 'warning', 5000);
-            } else {
-                showToast(`❌ Lỗi API: ${response.status}`, 'error', 4000);
-            }
-            
-            return null;
-        }
-
-        const data = await response.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        
-        if (!text) {
-            console.warn('⚠️ Gemini trả về phản hồi rỗng');
-            return null;
-        }
-        
-        return text;
-        
-    } catch (error) {
-        console.error('❌ Lỗi kết nối Gemini:', error);
-        showToast('❌ Lỗi kết nối đến Gemini API', 'error', 4000);
-        return null;
-    }
-}
-
-// ============================================
-// HÀM XỬ LÝ CHÍNH
-// ============================================
-async function getAIResponse(userMessage) {
-    if (aiLoading) {
-        showToast('⏳ AI đang xử lý, vui lòng chờ...', 'warning');
-        return;
-    }
-    
-    aiLoading = true;
-    showLoading('🧠 AI đang suy nghĩ...');
-    
-    try {
-        // Lấy context từ lịch sử chat (5 tin nhắn gần nhất)
-        const recentHistory = chatHistory.slice(-5);
-        const context = recentHistory.length > 0 
-            ? `Lịch sử trò chuyện gần đây:\n${recentHistory.join('\n')}`
-            : '';
-        
-        // Gọi Gemini API
-        let response = await callGeminiAPI(userMessage, context);
-        
-        // Nếu API thất bại, sử dụng fallback
-        if (!response) {
-            console.warn('⚠️ Sử dụng knowledge base fallback');
-            response = getAIResponseFallback(userMessage);
-        }
-        
-        // Lưu vào lịch sử
-        chatHistory.push(`User: ${userMessage}`);
-        chatHistory.push(`AI: ${response.substring(0, 100)}...`);
-        
-        // Giới hạn lịch sử
-        if (chatHistory.length > 50) {
-            chatHistory = chatHistory.slice(-50);
-        }
-        
-        return response;
-        
-    } catch (error) {
-        console.error('❌ Lỗi xử lý AI:', error);
-        return getAIResponseFallback(userMessage);
-    } finally {
-        aiLoading = false;
-        hideLoading();
-    }
-}
-
-// ============================================
-// FALLBACK: KNOWLEDGE BASE NÂNG CAO
-// ============================================
-function getAIResponseFallback(userMessage) {
-    const msg = userMessage.toLowerCase();
-    
-    // Tìm kiếm câu trả lời phù hợp
-    for (const item of knowledgeBaseAdvanced) {
-        for (const keyword of item.keywords) {
-            if (msg.includes(keyword.toLowerCase())) {
-                return item.response;
-            }
-        }
-    }
-    
-    return `🤔 Tôi chưa có đủ thông tin về câu hỏi này. 
-
-📌 Để tôi trả lời thông minh hơn, bạn cần:
-1️⃣ Đăng ký Gemini API key tại: https://ai.google.dev/gemini-api
-2️⃣ Dán key vào file js/config.js (dòng apiKey)
-3️⃣ Làm mới trang web
-
-💡 Hoặc bạn có thể thử hỏi tôi về:
-• 📚 Các môn học (lập trình, toán, tiếng Anh...)
-• 🧠 Phương pháp học hiệu quả
-• 💪 Sức khỏe tinh thần
-
-Hãy thử lại nhé! 🚀`;
-}
-
-// ============================================
-// KNOWLEDGE BASE NÂNG CAO (KHI OFFLINE)
-// ============================================
+// Cấu trúc knowledge base mới với từ khóa và câu trả lời
 const knowledgeBaseAdvanced = [
     {
-        keywords: ['lập trình', 'code', 'python', 'javascript', 'java', 'c++', 'html', 'css'],
-        response: `💻 **Học lập trình hiệu quả:**
-
-1️⃣ **Thực hành mỗi ngày:** Code ít nhất 30 phút/ngày
-2️⃣ **Dự án thực tế:** Làm ứng dụng/công cụ cho nhu cầu cá nhân
-3️⃣ **Đọc code người khác:** Học từ GitHub, Stack Overflow
-4️⃣ **Ghi chú và giải thích:** Viết blog hoặc note lại cách giải quyết
-5️⃣ **Tham gia cộng đồng:** Reddit, Dev.to, nhóm FB lập trình
-
-✨ **Mẹo:** Bắt đầu với Python hoặc JavaScript - dễ học và nhiều cơ hội!
-
-📚 **Tài nguyên học miễn phí:**
-• FreeCodeCamp - https://freecodecamp.org
-• The Odin Project - https://theodinproject.com
-• Codecademy - https://codecademy.com`
+        id: 'machine_learning',
+        keywords: ['machine learning', 'ml', 'học máy', 'ai', 'trí tuệ nhân tạo', 'mô hình'],
+        response: '🤖 Machine Learning là một nhánh của AI cho phép máy tính học từ dữ liệu.\n\n📌 Các loại chính:\n• Supervised Learning (Học có giám sát)\n• Unsupervised Learning (Học không giám sát)\n• Reinforcement Learning (Học tăng cường)\n\n📚 Ứng dụng: Nhận diện ảnh, xử lý ngôn ngữ tự nhiên, xe tự lái, dự đoán xu hướng.'
     },
     {
-        keywords: ['toán', 'giải tích', 'đại số', 'xác suất', 'thống kê'],
-        response: `📐 **Học Toán hiệu quả:**
-
-1️⃣ **Nắm vững lý thuyết:** Đọc kỹ định nghĩa, định lý
-2️⃣ **Làm nhiều bài tập:** Bắt đầu từ dễ đến khó
-3️⃣ **Vẽ sơ đồ tư duy:** Kết nối các khái niệm với nhau
-4️⃣ **Học nhóm:** Giải thích cho bạn bè để hiểu sâu hơn
-5️⃣ **Sử dụng công cụ:** Wolfram Alpha, Desmos để kiểm tra
-
-📌 **Các chủ đề quan trọng:**
-• Giải tích: Đạo hàm, Tích phân, Giới hạn
-• Đại số tuyến tính: Ma trận, Vector
-• Xác suất thống kê: Phân phối, Ước lượng`
+        id: 'python',
+        keywords: ['python', 'code python', 'học python', 'lập trình python', 'python cơ bản'],
+        response: '🐍 Python là ngôn ngữ lập trình thông dịch, dễ học, được dùng rộng rãi trong Data Science, Web, AI.\n\n✨ Đặc điểm nổi bật:\n• Cú pháp rõ ràng, dễ đọc\n• Thư viện phong phú (NumPy, Pandas, TensorFlow)\n• Cộng đồng lớn, nhiều tài liệu\n\n💡 Mẹo: Hãy bắt đầu với các khóa học cơ bản trên Codecademy hoặc Coursera.'
     },
     {
-        keywords: ['tiếng anh', 'ielts', 'toeic', 'ngữ pháp', 'từ vựng'],
-        response: `🇬🇧 **Học Tiếng Anh hiệu quả:**
-
-1️⃣ **Nghe mỗi ngày:** Podcast, YouTube, BBC News
-2️⃣ **Đọc sách/báo:** Bắt đầu với truyện ngắn, dần dần nâng cấp
-3️⃣ **Nói chuyện:** Tìm bạn đồng hành, tham gia câu lạc bộ
-4️⃣ **Viết nhật ký:** Viết 1-2 câu mỗi ngày bằng tiếng Anh
-5️⃣ **Học từ vựng theo chủ đề:** 5-10 từ mới mỗi ngày
-
-🎯 **Mục tiêu cụ thể:**
-• IELTS: 30 phút nghe + 30 phút đọc mỗi ngày
-• TOEIC: Làm 1 đề mỗi tuần
-• Giao tiếp: Thực hành 10 phút nói mỗi ngày
-
-📱 **App hữu ích:** Duolingo, Elsa Speak, Quizlet`
+        id: 'javascript',
+        keywords: ['javascript', 'js', 'es6', 'lập trình web', 'frontend', 'react'],
+        response: '⚡ JavaScript là ngôn ngữ lập trình cho web, cho phép tạo tương tác động.\n\n📌 Các khái niệm ES6 quan trọng:\n• Arrow functions: () => {}\n• Template literals: `${variable}`\n• Destructuring: const {name} = person\n• Spread operator: [...array]\n• Classes: class Person {}\n\n💡 Mẹo: Luyện tập trên LeetCode hoặc FreeCodeCamp.'
     },
     {
-        keywords: ['căng thẳng', 'stress', 'lo âu', 'mệt mỏi', 'sức khỏe', 'tinh thần', 'mất ngủ'],
-        response: `🧘 **Giảm căng thẳng cho sinh viên:**
-
-1️⃣ **Hít thở sâu:** 5 phút hít thở 4-7-8 (hít 4s, giữ 7s, thở 8s)
-2️⃣ **Vận động nhẹ:** Đi bộ 15 phút sau giờ học
-3️⃣ **Nghe nhạc thư giãn:** Âm nhạc không lời, thiền
-4️⃣ **Viết nhật ký:** Ghi ra những điều bạn lo lắng
-5️⃣ **Ngủ đủ giấc:** 7-8 tiếng mỗi đêm
-
-💡 **Kỹ thuật Pomodoro:** 
-25 phút học → 5 phút nghỉ → Lặp lại
-
-🌿 **Thực phẩm tốt cho tinh thần:**
-• Cá hồi, quả óc chó (Omega-3)
-• Socola đen (tăng serotonin)
-• Trà xanh (L-theanine)
-
-🆘 **Nếu cần hỗ trợ:** 
-Hotline Tâm lý: 1900 1234
-Website: https://www.psy.edu.vn`
+        id: 'html',
+        keywords: ['html', 'thẻ html', 'cấu trúc web', 'div', 'form'],
+        response: '📄 HTML là ngôn ngữ đánh dấu siêu văn bản, dùng để tạo cấu trúc trang web.\n\n🏗️ Cấu trúc cơ bản:\n• <!DOCTYPE html>\n• <html> → <head> → <body>\n• Các thẻ: div, p, h1-h6, a, img, ul/ol, table, form\n\n💡 Mẹo: Sử dụng các thẻ ngữ nghĩa như <header>, <nav>, <main>, <article>, <footer> để SEO tốt hơn.'
     },
     {
-        keywords: ['thi', 'kiểm tra', 'ôn tập', 'đề thi'],
-        response: `📝 **Ôn thi hiệu quả:**
-
-1️⃣ **Lập kế hoạch:** Phân bổ thời gian cho từng môn
-2️⃣ **Hệ thống hóa kiến thức:** Sơ đồ tư duy, bảng biểu
-3️⃣ **Làm đề thi thử:** Đúng thời gian, điều kiện như thi thật
-4️⃣ **Học nhóm ôn thi:** Chia sẻ kiến thức, giải đáp thắc mắc
-5️⃣ **Nghỉ ngơi hợp lý:** 50 phút học - 10 phút nghỉ
-
-📌 **Lịch ôn tập mẫu:**
-• Tuần 1-2: Ôn lý thuyết
-• Tuần 3-4: Làm bài tập
-• Tuần 5: Đề thi thử
-• Tuần 6: Tổng ôn và nghỉ ngơi
-
-💪 **Trước thi:**
-• Ngủ đủ 8 tiếng
-• Ăn sáng đầy đủ
-• Đến sớm 30 phút`
+        id: 'css',
+        keywords: ['css', 'style', 'flexbox', 'grid', 'responsive', 'layout'],
+        response: '🎨 CSS dùng để trang trí và định dạng trang web.\n\n📌 Các khái niệm quan trọng:\n• Flexbox: display: flex, justify-content, align-items\n• Grid: display: grid, grid-template-columns, gap\n• Media Queries: @media (max-width: 768px)\n• Animations: @keyframes, animation\n\n💡 Mẹo: Học CSS qua trò chơi Flexbox Froggy và Grid Garden.'
     },
     {
-        keywords: ['quản lý thời gian', 'procrastination', 'trì hoãn', 'lười'],
-        response: `⏰ **Quản lý thời gian và chống trì hoãn:**
-
-1️⃣ **Quy tắc 2 phút:** Nếu việc gì làm dưới 2 phút - làm ngay
-2️⃣ **Phương pháp Pomodoro:** 25/5 (học/nghỉ)
-3️⃣ **Ưu tiên theo ma trận Eisenhower:**
-   • Quan trọng - Khẩn cấp: Làm ngay
-   • Quan trọng - Không khẩn cấp: Lên kế hoạch
-   • Không quan trọng - Khẩn cấp: Ủy quyền
-   • Không quan trọng - Không khẩn cấp: Bỏ qua
-
-4️⃣ **Lập danh sách:** Viết 3 việc quan trọng nhất mỗi ngày
-5️⃣ **Thưởng cho bản thân:** Sau khi hoàn thành mục tiêu
-
-🎯 **Ứng dụng hỗ trợ:**
-• Notion - Quản lý công việc
-• Forest - Tập trung học tập
-• Google Calendar - Lên lịch`
+        id: 'git',
+        keywords: ['git', 'github', 'version control', 'commit', 'branch', 'pull request'],
+        response: '📦 Git là hệ thống quản lý phiên bản phân tán.\n\n📌 Các lệnh cơ bản:\n• git init → Khởi tạo repo\n• git add . → Thêm file vào staging\n• git commit -m "message" → Lưu snapshot\n• git push → Đẩy lên remote\n• git pull → Lấy code mới nhất\n• git branch → Quản lý nhánh\n\n💡 Mẹo: Luôn viết commit message rõ ràng và có ý nghĩa.'
+    },
+    {
+        id: 'sql',
+        keywords: ['sql', 'database', 'query', 'mysql', 'postgresql', 'mongodb'],
+        response: '🗄️ SQL là ngôn ngữ truy vấn dữ liệu quan hệ.\n\n📌 Các lệnh cơ bản:\n• SELECT * FROM table WHERE condition\n• INSERT INTO table (col1, col2) VALUES (val1, val2)\n• UPDATE table SET col1 = val1 WHERE condition\n• DELETE FROM table WHERE condition\n• JOIN table ON condition\n• GROUP BY, ORDER BY\n\n💡 Mẹo: Học SQL qua các nền tảng như Mode Analytics hoặc SQLZoo.'
+    },
+    {
+        id: 'react',
+        keywords: ['react', 'redux', 'hook', 'usestate', 'useeffect', 'component'],
+        response: '⚛️ React là thư viện JavaScript để xây dựng giao diện người dùng.\n\n📌 Các khái niệm chính:\n• Components (Function và Class)\n• Props (Truyền dữ liệu từ cha sang con)\n• State (Quản lý trạng thái nội bộ)\n• Hooks: useState, useEffect, useContext\n• JSX (JavaScript XML)\n\n💡 Mẹo: Bắt đầu với Create React App và làm các project nhỏ để thực hành.'
+    },
+    {
+        id: 'stress',
+        keywords: ['stress', 'căng thẳng', 'lo âu', 'thi cử', 'áp lực', 'mệt mỏi', 'relax'],
+        response: '🧘 Để giảm stress khi ôn thi:\n\n📌 Phương pháp hiệu quả:\n1. ⏰ Pomodoro: 25 phút học + 5 phút nghỉ\n2. 🏃 Tập thể dục nhẹ 15-20 phút\n3. 😴 Ngủ đủ 7-8 tiếng mỗi đêm\n4. 🌿 Hít thở sâu: 4-7-8 (hít 4s, giữ 7s, thở 8s)\n5. 📱 Giảm thời gian sử dụng điện thoại\n6. 🗣️ Nói chuyện với bạn bè, người thân\n\n💡 Mẹo: Viết ra những điều lo lắng để giải tỏa tâm lý.'
+    },
+    {
+        id: 'schedule',
+        keywords: ['lịch học', 'thời gian biểu', 'lập kế hoạch', 'học tập', 'ôn thi', 'plan'],
+        response: '📅 Lịch học lý tưởng:\n\n📌 Nguyên tắc vàng:\n• ⏰ 45 phút học + 10 phút nghỉ\n• 📚 Mỗi ngày tối đa 4-6 giờ học hiệu quả\n• 🌅 Học môn khó vào buổi sáng (tập trung cao)\n• 🌙 Ôn tập nhẹ nhàng vào buổi tối\n• 📆 Lên kế hoạch học theo tuần\n\n💡 Mẹo: Sử dụng phương pháp Feynman để học sâu: Giải thích lại kiến thức bằng ngôn ngữ của bạn.'
+    },
+    {
+        id: 'memory',
+        keywords: ['ghi nhớ', 'nhớ lâu', 'học thuộc', 'flashcard', 'mindmap', 'spaced repetition'],
+        response: '🧠 Kỹ thuật ghi nhớ hiệu quả:\n\n📌 Phương pháp:\n• Spaced Repetition (Lặp lại ngắt quãng)\n• Mind Map (Sơ đồ tư duy)\n• Mnemonic (Ghi nhớ bằng hình ảnh, từ khóa)\n• Flashcard (Thẻ nhớ)\n• Active Recall (Gợi nhớ chủ động)\n\n💡 Mẹo: Áp dụng phương pháp Pomodoro và Spaced Repetition kết hợp sẽ cực kỳ hiệu quả.'
+    },
+    {
+        id: 'time_management',
+        keywords: ['quản lý thời gian', 'time management', 'làm việc hiệu quả', 'eisenhower'],
+        response: '⏰ Quản lý thời gian cho sinh viên:\n\n📌 Nguyên tắc Eisenhower:\n• 🔴 Quan trọng + Khẩn cấp → Làm ngay\n• 🟠 Quan trọng + Không khẩn cấp → Lên kế hoạch\n• 🟡 Không quan trọng + Khẩn cấp → Ủy thác\n• 🟢 Không quan trọng + Không khẩn cấp → Bỏ qua\n\n💡 Mẹo: Sử dụng ứng dụng như Notion, Todoist hoặc Google Calendar để tổ chức công việc.'
+    },
+    {
+        id: 'internship',
+        keywords: ['thực tập', 'intern', 'tuyển dụng', 'cv', 'portfolio', 'phỏng vấn'],
+        response: '💼 Kinh nghiệm tìm thực tập:\n\n📌 Các bước:\n1. Xác định lĩnh vực và kỹ năng mục tiêu\n2. Xây dựng CV và Portfolio\n3. Tìm kiếm trên LinkedIn, VietnamWorks, TopDev\n4. Chuẩn bị phỏng vấn (Technical + Behavioral)\n5. Học hỏi và networking trong quá trình thực tập\n\n💡 Mẹo: Bắt đầu sớm và tích lũy project cá nhân để có lợi thế cạnh tranh.'
+    },
+    {
+        id: 'anxiety',
+        keywords: ['lo âu', 'anxiety', 'hoảng loạn', 'panic', 'bồn chồn'],
+        response: '😰 Lo âu là phản ứng tự nhiên của cơ thể.\n\n📌 Cách quản lý lo âu:\n• Nhận diện nguyên nhân gây lo âu\n• Thực hành mindfulness (chánh niệm)\n• Tập thể dục thường xuyên\n• Hạn chế caffeine và đường\n• Ngủ đủ giấc\n• Tìm kiếm sự hỗ trợ từ chuyên gia\n\n💡 Mẹo: Kỹ thuật 5-4-3-2-1: Nhìn 5 thứ, chạm 4 thứ, nghe 3 âm thanh, ngửi 2 mùi, nếm 1 vị.'
+    },
+    {
+        id: 'sleep',
+        keywords: ['giấc ngủ', 'mất ngủ', 'ngủ', 'sleep', 'insomnia', 'nghỉ ngơi'],
+        response: '😴 Cải thiện giấc ngủ:\n\n📌 Mẹo hay:\n• Tắt điện thoại 30 phút trước khi ngủ\n• Tạo không gian ngủ tối, yên tĩnh\n• Đi ngủ và thức dậy cùng giờ mỗi ngày\n• Tránh caffeine sau 4 giờ chiều\n• Tập thể dục nhẹ trước khi ngủ\n\n💡 Mẹo: Đọc sách giấy thay vì dùng điện thoại trước khi ngủ.'
+    },
+    {
+        id: 'focus',
+        keywords: ['tập trung', 'mất tập trung', 'concentrate', 'điện thoại', 'phân tâm'],
+        response: '🎯 Cách cải thiện sự tập trung:\n\n📌 Kỹ thuật:\n• Tắt thông báo điện thoại và máy tính\n• Sử dụng ứng dụng như Forest hoặc Focus Keeper\n• Làm việc trong môi trường yên tĩnh\n• Chia nhỏ công việc thành các nhiệm vụ dễ hoàn thành\n• Thiền 5-10 phút trước khi học\n\n💡 Mẹo: Kỹ thuật Pomodoro (25/5) giúp cải thiện tập trung đáng kể.'
     }
 ];
 
-// ============================================
-// HÀM XỬ LÝ CHAT
-// ============================================
-async function handleAIChat() {
-    const input = document.getElementById('aiInput');
-    const output = document.getElementById('aiOutput');
-    const message = input.value.trim();
+// Hàm tìm kiếm thông minh
+function getAIResponseAdvanced(query) {
+    const lower = query.toLowerCase();
     
-    if (!message) {
-        showToast('⚠️ Vui lòng nhập câu hỏi!', 'warning');
-        return;
+    // Tìm kiếm với độ ưu tiên
+    let bestMatch = null;
+    let maxScore = 0;
+    
+    for (const item of knowledgeBaseAdvanced) {
+        let score = 0;
+        for (const keyword of item.keywords) {
+            if (lower.includes(keyword)) {
+                // Từ khóa dài hơn (cụ thể hơn) được ưu tiên
+                score += keyword.length;
+            }
+        }
+        if (score > maxScore) {
+            maxScore = score;
+            bestMatch = item;
+        }
     }
     
-    // Thêm câu hỏi vào chat
-    const userMessageHTML = `<div class="chat-message user">
-        <div class="message-content">${message}</div>
-        <div class="message-time">${new Date().toLocaleTimeString()}</div>
-    </div>`;
+    if (bestMatch && maxScore >= 3) {
+        return bestMatch.response;
+    }
     
-    output.innerHTML += userMessageHTML;
-    input.value = '';
-    output.scrollTop = output.scrollHeight;
+    // Nếu không tìm thấy, trả về gợi ý
+    const suggestions = knowledgeBaseAdvanced.slice(0, 6).map(item => 
+        `• ${item.keywords[0].charAt(0).toUpperCase() + item.keywords[0].slice(1)}`
+    ).join('\n');
     
-    // Thêm loading indicator
-    const loadingHTML = `<div class="chat-message ai loading-message">
-        <div class="message-content">🧠 Đang suy nghĩ...</div>
-    </div>`;
-    output.innerHTML += loadingHTML;
-    output.scrollTop = output.scrollHeight;
-    
-    // Gọi AI
-    const response = await getAIResponse(message);
-    
-    // Xóa loading indicator
-    const loadingElement = output.querySelector('.loading-message');
-    if (loadingElement) loadingElement.remove();
-    
-    // Hiển thị phản hồi
-    const aiMessageHTML = `<div class="chat-message ai">
-        <div class="message-content">${response}</div>
-        <div class="message-time">${new Date().toLocaleTimeString()}</div>
-    </div>`;
-    
-    output.innerHTML += aiMessageHTML;
-    output.scrollTop = output.scrollHeight;
+    return `🤔 Mình chưa có thông tin cụ thể về câu hỏi này. Bạn có thể thử hỏi về:\n\n${suggestions}\n\nHoặc mô tả chi tiết hơn để mình có thể giúp bạn tốt hơn! 🤗`;
 }
 
-// ============================================
-// XỬ LÝ PHÍM ENTER
-// ============================================
-document.addEventListener('DOMContentLoaded', function() {
-    const input = document.getElementById('aiInput');
-    if (input) {
-        input.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleAIChat();
-            }
-        });
+// Giữ lại hàm cũ để tương thích
+function getAIResponse(query) {
+    return getAIResponseAdvanced(query);
+}
+
+function initAIAssistant() {
+    const input = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const messages = document.getElementById('chatMessages');
+    const quickBtns = document.querySelectorAll('.quick-btn');
+
+    function addMessage(text, isUser = false) {
+        const div = document.createElement('div');
+        div.className = `message ${isUser ? 'user' : 'bot'}`;
+        div.innerHTML = `
+            <div class="avatar">${isUser ? '👤' : '🤖'}</div>
+            <div class="bubble">${text.replace(/\n/g, '<br>')}</div>
+        `;
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
     }
-});
+
+    function handleSend() {
+        const text = input.value.trim();
+        if (!text) return;
+        
+        // Thêm loading
+        addMessage('🤔 Đang suy nghĩ...', false);
+        const loadingMsg = messages.lastChild;
+        
+        addMessage(text, true);
+        input.value = '';
+
+        setTimeout(() => {
+            // Xóa message loading và thêm response thật
+            if (loadingMsg && loadingMsg.parentNode) {
+                loadingMsg.remove();
+            }
+            const response = getAIResponseAdvanced(text);
+            addMessage(response);
+        }, 500 + Math.random() * 500);
+    }
+
+    sendBtn.addEventListener('click', handleSend);
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handleSend();
+    });
+
+    quickBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            input.value = btn.dataset.question;
+            handleSend();
+        });
+    });
+}
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    initAIAssistant();
+} else {
+    document.addEventListener('DOMContentLoaded', initAIAssistant);
+}
