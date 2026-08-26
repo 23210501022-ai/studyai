@@ -1,46 +1,37 @@
 // ============================================================
-// CONFIG.JS - CẤU HÌNH API KEYS
+// CONFIG.JS - CẤU HÌNH GEMINI API
 // ============================================================
 
 const CONFIG = {
-    // SỬ DỤNG MỘT TRONG CÁC API DƯỚI ĐÂY:
-    
-    // LỰA CHỌN 1: OpenAI (mất phí, nhưng đơn giản nhất)
-    OPENAI: {
-        apiKey: 'sk-...', // Thay bằng key của bạn
-        model: 'gpt-3.5-turbo',
-        url: 'https://api.openai.com/v1/chat/completions'
-    },
-    
-    // LỰA CHỌN 2: Gemini (miễn phí, recommend cho sinh viên)
+    // ============================================
+    // GEMINI API - Google AI Studio (Miễn phí)
+    // ============================================
     GEMINI: {
-        apiKey: 'AIzaSy...', // Thay bằng key của bạn
-        model: 'gemini-2.0-flash-exp', // hoặc 'gemini-1.5-flash'
+        // 👇 THAY API_KEY CỦA BẠN VÀO ĐÂY
+        apiKey: 'AIzaSyDz2PZpHQ2mU3iMmLjX5KxV3F9ZdM3FgwM', // <- Thay key của bạn
+        model: 'gemini-2.0-flash-exp', // hoặc 'gemini-1.5-flash', 'gemini-1.5-pro'
         url: 'https://generativelanguage.googleapis.com/v1beta/models'
-    },
-    
-    // LỰA CHỌN 3: HuggingFace (miễn phí, nhiều mô hình)
-    HUGGINGFACE: {
-        apiKey: 'hf_...', // Thay bằng key của bạn
-        model: 'mistralai/Mistral-7B-Instruct-v0.1',
-        url: 'https://api-inference.huggingface.co/models'
-    },
-    
-    // Chọn API đang sử dụng
-    CURRENT_API: 'GEMINI' // Thay đổi tại đây
+    }
 };
 
 // ============================================
-// HÀM LẤY API KEY
+// HÀM LẤY CẤU HÌNH GEMINI
 // ============================================
-function getApiConfig() {
-    const apiName = CONFIG.CURRENT_API;
-    return CONFIG[apiName];
+function getGeminiConfig() {
+    return CONFIG.GEMINI;
 }
 
 // ============================================
-// EXPORT
+// HÀM KIỂM TRA API KEY ĐÃ CẤU HÌNH CHƯA
+// ============================================
+function isGeminiConfigured() {
+    const config = getGeminiConfig();
+    return config.apiKey && config.apiKey !== 'AIzaSyDz2PZpHQ2mU3iMmLjX5KxV3F9ZdM3FgwM';
+}
+
+// ============================================
+// EXPORT (cho module nếu dùng)
 // ============================================
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { CONFIG, getApiConfig };
+    module.exports = { CONFIG, getGeminiConfig, isGeminiConfigured };
 }
