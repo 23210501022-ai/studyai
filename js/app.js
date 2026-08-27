@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof initAIAssistant === 'function') initAIAssistant();
     if (typeof initScheduler === 'function') initScheduler();
     if (typeof initMentalHealth === 'function') initMentalHealth();
+    if (typeof initDashboard === 'function') initDashboard();
     
     // Dashboard sẽ được khởi tạo từ data.js và dashboard.js
 });
