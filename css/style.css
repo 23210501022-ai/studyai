@@ -971,6 +971,10 @@ body.dark-theme .insight-item {
         flex-wrap: wrap;
         gap: 8px;
     }
+   #saveScheduleBtn {
+    width: 100%;
+    margin-top: 12px !important;
+}
     
     .logo {
         font-size: 20px;
@@ -1106,6 +1110,26 @@ body.dark-theme .insight-item {
         min-width: 80px;
         font-size: 12px;
     }
+}
+
+/* ============================================================
+   BUTTON SAVE SCHEDULE
+   ============================================================ */
+#saveScheduleBtn {
+    background: #10b981;
+    transition: background 0.2s;
+}
+
+#saveScheduleBtn:hover {
+    background: #059669;
+}
+
+body.dark-theme #saveScheduleBtn {
+    background: #059669;
+}
+
+body.dark-theme #saveScheduleBtn:hover {
+    background: #047857;
 }
 
 @media (max-width: 400px) {
