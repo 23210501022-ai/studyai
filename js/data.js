@@ -223,3 +223,17 @@ if (typeof module !== 'undefined' && module.exports) {
         sampleStressLevel
     };
 }
+
+    // ============================================================
+// ĐẢM BẢO DỮ LIỆU LUÔN CÓ SẴN (FALLBACK)
+// ============================================================
+if (typeof window !== 'undefined') {
+    // Gán vào window để các module khác dùng được
+    window.analyzeAIAssistantData = analyzeAIAssistantData;
+    window.analyzeStressData = analyzeStressData;
+    window.analyzeStressLevelData = analyzeStressLevelData;
+    window.getAIAdviceFromData = getAIAdviceFromData;
+    window.sampleSessions = sampleSessions;
+    window.sampleStress = sampleStress;
+    window.sampleStressLevel = sampleStressLevel;
+}
