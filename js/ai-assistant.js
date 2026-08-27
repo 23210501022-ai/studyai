@@ -153,11 +153,22 @@ function initAIAssistant() {
         addMessage(text, true);
         input.value = '';
 
+        // Thêm loading message với ID để dễ tìm
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'message bot';
+        loadingDiv.id = 'loadingMessage';
+        loadingDiv.innerHTML = `
+            <div class="avatar">🤖</div>
+            <div class="bubble">🤔 Đang suy nghĩ...</div>
+        `;
+        messages.appendChild(loadingDiv);
+        messages.scrollTop = messages.scrollHeight;
+
         setTimeout(() => {
-            // Xóa message loading và thêm response thật
-            if (loadingMsg && loadingMsg.parentNode) {
-                loadingMsg.remove();
-            }
+            // Xóa loading bằng ID
+        const loading = document.getElementById('loadingMessage');
+        if (loading) loading.remove();
+            
             const response = getAIResponseAdvanced(text);
             addMessage(response);
         }, 500 + Math.random() * 500);
