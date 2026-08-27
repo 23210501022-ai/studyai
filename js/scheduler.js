@@ -200,7 +200,106 @@ function initScheduler() {
     
     // Thêm vào generateSchedule:
     // Khi tạo lịch, thêm nút xuất PDF cho lịch hiện tại
-    function generateSchedule() {
+        function generateSchedule() {
+    const numSubjectsValue = parseInt(numSubjects.value) || 4;
+    const hoursPerDayValue = parseFloat(hoursPerDay.value) || 4;
+    const stress = parseInt(stressLevel.value) || 3;
+
+    // ĐỊNH NGHĨA BIẾN NÀY
+    const subjectList = ['Toán', 'Lý', 'Hóa', 'Văn', 'Anh', 'Sinh', 'Sử', 'Địa', 'GDCD', 'Tin học'];
+    const chosenSubjects = subjectList.slice(0, numSubjectsValue);
+    const subjectsPerDay = chosenSubjects;
+    const totalHours = hoursPerDayValue;
+
+    // TẠO SCHEDULE DATA
+    const scheduleData = [];
+    const startHour = 7;
+    const breakMinutes = 10;
+    
+    let html = '<ul style="list-style:none;padding:0;">';
+    let currentHour = startHour;
+    
+    for (let i = 0; i < subjectsPerDay.length; i++) {
+        const duration = totalHours / subjectsPerDay.length;
+        const startTime = currentHour;
+        const endTime = currentHour + duration;
+        
+        const startStr = `${Math.floor(startTime)}:${String(Math.round((startTime % 1) * 60)).padStart(2, '0')}`;
+        const endStr = `${Math.floor(endTime)}:${String(Math.round((endTime % 1) * 60)).padStart(2, '0')}`;
+        
+        const subject = subjectsPerDay[i];
+        const priority = stress > 3 ? 'Ưu tiên' : 'Bình thường';
+        
+        scheduleData.push({
+            subject: subject,
+            time: `${startStr} - ${endStr}`,
+            duration: duration.toFixed(1),
+            priority: priority
+        });
+        
+        html += `
+            <li style="padding:10px 14px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;">
+                <span class="time" style="font-weight:600;color:#3b82f6;">${startStr} - ${endStr}</span>
+                <span class="subject">📖 ${subject}</span>
+                <span style="font-size:12px;color:#94a3b8;">${i > 0 ? 'Nghỉ ' + breakMinutes + ' phút' : ''}</span>
+            </li>
+        `;
+        
+        currentHour = endTime + breakMinutes / 60;
+    }
+    html += '</ul>';
+    
+    // Hiển thị stress
+    const stressEmojis = '😊'.repeat(Math.min(stress, 5)) + '😰'.repeat(Math.max(0, 5 - stress));
+    html += `<p style="font-size:14px;color:#64748b;margin-top:12px;">🧘 Mức độ stress: ${stressEmojis}</p>`;
+    
+    // Thêm nút chức năng
+    html += `
+        <div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap;">
+            <button id="saveScheduleBtn" class="btn-primary" style="background:#10b981;padding:10px 20px;border:none;border-radius:10px;color:#fff;font-weight:600;cursor:pointer;font-size:14px;">
+                💾 Lưu lịch học này
+            </button>
+            <button id="exportPDFBtn" class="btn-primary" style="background:#ef4444;padding:10px 20px;border:none;border-radius:10px;color:#fff;font-weight:600;cursor:pointer;font-size:14px;">
+                📄 Xuất PDF
+            </button>
+        </div>
+    `;
+    
+    scheduleList.innerHTML = html;
+    
+    // Sự kiện lưu
+    document.getElementById('saveScheduleBtn')?.addEventListener('click', function() {
+        const newSchedule = {
+            id: Date.now(),
+            date: new Date().toLocaleString('vi-VN'),
+            data: scheduleData,
+            subjects: scheduleData.map(item => item.subject),
+            totalHours: totalHours
+        };
+        savedSchedules.unshift(newSchedule);
+        localStorage.setItem('studyai-schedules', JSON.stringify(savedSchedules));
+        renderSavedSchedules();
+        showToast('✅ Đã lưu lịch học thành công!', 'success');
+    });
+    
+    // Sự kiện xuất PDF
+    document.getElementById('exportPDFBtn')?.addEventListener('click', function() {
+        const tempSchedule = {
+            id: Date.now(),
+            date: new Date().toLocaleString('vi-VN'),
+            data: scheduleData,
+            subjects: scheduleData.map(item => item.subject),
+            totalHours: totalHours
+        };
+        // Thêm vào danh sách tạm để xuất
+        const tempSaved = [...savedSchedules];
+        tempSaved.push(tempSchedule);
+        // Gọi export với id tạm
+        exportSchedulePDF(tempSchedule.id);
+    });
+    
+    showToast('✅ Đã tạo lịch học mới!', 'success');
+}
         // ... (code tạo lịch như cũ)
         
         // Thêm nút xuất PDF cho lịch hiện tại
