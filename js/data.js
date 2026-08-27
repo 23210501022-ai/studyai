@@ -6,6 +6,15 @@
 // 1. DỮ LIỆU TỪ FILE: ai_assistant_usage_student_life.csv
 // ============================================================
 
+function initDashboard() {
+    // Kiểm tra dữ liệu đã sẵn sàng
+    if (typeof analyzeAIAssistantData === 'undefined') {
+        console.warn('⚠️ data.js chưa được load. Dashboard sẽ dùng dữ liệu mẫu.');
+        // Dùng dữ liệu mẫu fallback
+        renderFallbackDashboard();
+        return;
+    }
+    
 // Dữ liệu mẫu từ CSV (đã được xử lý)
 const sampleSessions = [
     // Undergraduate - Computer Science
